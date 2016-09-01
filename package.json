@@ -1,0 +1,18 @@
+{
+  "name": "exec_once_per_args",
+  "version": "0.0.1",
+  "description": "create a simple once caller per function and arg combination",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lodash",
+    "idempotence"
+  ],
+  "author": "victusfate",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.15.0"
+  }
+}
