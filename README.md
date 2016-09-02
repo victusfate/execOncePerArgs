@@ -1,7 +1,7 @@
 execOncePerArgs
 ===
 
-call a function once for a given set of args
+call a promise returning function once (successfully) for a given set of args. If error it removes itself from blocking future attempts
 
     const execOncePerArgs = require('./index').execOncePerArgs;
     const _               = require('lodash');
@@ -13,24 +13,46 @@ call a function once for a given set of args
       console.log({ action: 'someFunc.called', iCalled: iCalled });
       iCalled++;
 
-      return a + b + c;
+      return new Promise( (resolve,reject) => {
+        if (iCalled < 3) {
+          reject(Error('someFunc.err.'+iCalled));
+        }
+        else {
+          setTimeout( () => {
+            resolve(a + b + c);
+          },Math.random() * 1000);        
+        }
+      })
     }
 
     let options = {
       func: someFunc,
       thisArg: undefined,
       args: [0,1,2],
+      maxAttempts: 2
     }
-    
+    // options.sHash = func.toString() + args.toString();  
     options.sHash = crypto.createHash('sha256').update(options.func.toString() + options.args.toString()).digest('hex');
 
-    let result = null;
-    for (let i = 0;i < 1000000;i++) {
-      result = execOncePerArgs(options);
+    let optionsB = {
+      func: someFunc,
+      thisArg: undefined,
+      args: [3,4,5],
+      maxAttempts: 2
     }
-    console.log(result);
+    optionsB.sHash = crypto.createHash('sha256').update(optionsB.func.toString() + optionsB.args.toString()).digest('hex');
 
-    // outputs:
-    // { action: 'someFunc.called', iCalled: 0 }
-    // 3
+
+
+    let tStart = Date.now();
+    let aPromises = [];
+    const N = 250000;
+    for (let i = 0;i < N;i++) {
+      aPromises.push(execOncePerArgs(options));  
+      aPromises.push(execOncePerArgs(optionsB));  
+    }
+    Promise.all(aPromises).then( () => {
+      let dT = Date.now() - tStart;
+      console.log({ action: 'promises complete time', dT: dT + ' ms' });
+    })
 
