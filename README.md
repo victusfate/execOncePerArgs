@@ -26,21 +26,21 @@ call a promise returning function once (successfully) for a given set of args. I
     }
 
     let options = {
-      func: someFunc,
+      promiseFunc: someFunc,
       thisArg: undefined,
       args: [0,1,2],
       maxAttempts: 2
     }
-    // options.sHash = func.toString() + args.toString();  
-    options.sHash = crypto.createHash('sha256').update(options.func.toString() + options.args.toString()).digest('hex');
+    // options.sHash = promiseFunc.toString() + args.toString();  
+    options.sHash = crypto.createHash('sha256').update(options.promiseFunc.toString() + options.args.toString()).digest('hex');
 
     let optionsB = {
-      func: someFunc,
+      promiseFunc: someFunc,
       thisArg: undefined,
       args: [3,4,5],
       maxAttempts: 2
     }
-    optionsB.sHash = crypto.createHash('sha256').update(optionsB.func.toString() + optionsB.args.toString()).digest('hex');
+    optionsB.sHash = crypto.createHash('sha256').update(optionsB.promiseFunc.toString() + optionsB.args.toString()).digest('hex');
 
 
 
