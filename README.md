@@ -1,7 +1,7 @@
 execOncePerArgs
 ===
 
-call a promise returning function once (successfully) for a given set of args. If error it removes itself from blocking future attempts
+call a promise returning function once (successfully) for a given set of args. If error it removes itself from blocking future attempts. known issues: my test is a memory hog (500k promises with retries)
 
     const execOncePerArgs = require('./index').execOncePerArgs;
     const _               = require('lodash');
