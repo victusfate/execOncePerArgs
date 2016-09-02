@@ -1,6 +1,7 @@
 'use strict';
 
 const execOncePerArgs = require('./index').execOncePerArgs;
+const retries         = require('./index').retries;
 const _               = require('lodash');
 const crypto          = require('crypto');
 
@@ -42,7 +43,7 @@ const crypto          = require('crypto');
 
   let tStart = Date.now();
   let aPromises = [];
-  const N = 250000;
+  const N = 250000; // memory issue with 500k -> 1million stored promises with retries
   for (let i = 0;i < N;i++) {
     aPromises.push(execOncePerArgs(options));  
     aPromises.push(execOncePerArgs(optionsB));  
@@ -75,4 +76,34 @@ const crypto          = require('crypto');
   //   console.log({ action:'complete memoize time', dT: dT + ' ms', data:data });
   // })
 }
+{
 
+  // retries
+  let iCalled = 0;
+
+  const someOtherFunc = (a,b,c) => {
+    console.log({ action: 'someOtherFunc.called', iCalled: iCalled });
+    iCalled++;
+
+    return new Promise( (resolve,reject) => {
+      if (iCalled < 3) {
+        reject(Error('someOtherFunc.err.'+iCalled));
+      }
+      else {
+        setTimeout( () => {
+          resolve(a + b + c);
+        },Math.random() * 1000);        
+      }
+    })
+  }
+  const args        = [0,1,2];
+  const maxAttempts = 3;
+
+  retries(someOtherFunc,this,args,0,maxAttempts)
+  .then( (data) => {
+    console.log({ action:'retries', data:data })
+  })
+  .catch( (err) => {
+    console.error({ action: 'retries.err.should.not.happen', err:err });
+  })
+}

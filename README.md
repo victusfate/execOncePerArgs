@@ -56,3 +56,33 @@ call a promise returning function once (successfully) for a given set of args. I
       console.log({ action: 'promises complete time', dT: dT + ' ms' });
     })
 
+
+retries
+===
+
+    // retries
+    const someOtherFunc = (a,b,c) => {
+      console.log({ action: 'someOtherFunc.called', iCalled: iCalled });
+      iCalled++;
+
+      return new Promise( (resolve,reject) => {
+        if (iCalled < 3) {
+          reject(Error('someOtherFunc.err.'+iCalled));
+        }
+        else {
+          setTimeout( () => {
+            resolve(a + b + c);
+          },Math.random() * 1000);        
+        }
+      })
+    }
+    const args = [0,1,2];
+    const maxAttempts = 3;
+
+    retries(someOtherFunc,this,args,0,maxAttempts).then( (data) => {
+      console.log({ action:'retries', data:data })
+    })
+    .catch( (err) => {
+      console.error({ action: 'retries.err.should.not.happen' });
+    })
+

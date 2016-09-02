@@ -40,6 +40,7 @@ const retries = (promiseFun,thisArg,argsArray,nAttempts,maxAttempts) => {
           reject(err);
         }
         else {
+          // console.log({ action: sAction + '.retrying', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
           const delay = Math.pow(2,nAttempts) * 1000;
           setTimeout(() => {
             resolve(retries(promiseFun,thisArg,argsArray,nAttempts,maxAttempts));
