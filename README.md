@@ -29,7 +29,8 @@ call a promise returning function once (successfully) for a given set of args. I
       promiseFunc: someFunc,
       thisArg: undefined,
       args: [0,1,2],
-      maxAttempts: 2
+      maxAttempts: 2,
+      TTL: 60 * 1000 // blocks for up to 1 minute, default blocks indefinitely
     }
     // options.sHash = promiseFunc.toString() + args.toString();  
     options.sHash = crypto.createHash('sha256').update(options.promiseFunc.toString() + options.args.toString()).digest('hex');
@@ -38,7 +39,8 @@ call a promise returning function once (successfully) for a given set of args. I
       promiseFunc: someFunc,
       thisArg: undefined,
       args: [3,4,5],
-      maxAttempts: 2
+      maxAttempts: 2,
+      TTL: 60 * 1000
     }
     optionsB.sHash = crypto.createHash('sha256').update(optionsB.promiseFunc.toString() + optionsB.args.toString()).digest('hex');
 

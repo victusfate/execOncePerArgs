@@ -6,15 +6,16 @@ const _               = require('lodash');
 const crypto          = require('crypto');
 
 {
+  const sTest = 'execOncePerArgs';
   let iCalled = 0;
 
-  const someFunc = (a,b,c) => {
-    console.log({ action: 'someFunc.called', iCalled: iCalled });
+  const someFunc = (a,b,c,name) => {
+    console.log({ action: sTest + '.'+ name + '.called', iCalled: iCalled });
     iCalled++;
 
     return new Promise( (resolve,reject) => {
       if (iCalled < 3) {
-        reject(Error('someFunc.err.'+iCalled));
+        reject(Error( sTest + '.' + name + '.err.'+iCalled));
       }
       else {
         setTimeout( () => {
@@ -27,8 +28,9 @@ const crypto          = require('crypto');
   let options = {
     promiseFunc : someFunc,
     thisArg     : undefined,
-    args        : [0,1,2],
-    maxAttempts : 2
+    args        : [0,1,2,'f1'],
+    maxAttempts : 2,
+    TTL         : 0 // blocks for 0 ms
   }
   // options.sHash = func.toString() + args.toString();  
   options.sHash = crypto.createHash('sha256').update(options.promiseFunc.toString() + options.args.toString()).digest('hex');
@@ -36,24 +38,27 @@ const crypto          = require('crypto');
   let optionsB = {
     promiseFunc: someFunc,
     thisArg: undefined,
-    args: [3,4,5],
-    maxAttempts : 2
+    args: [3,4,5,'f2'],
+    maxAttempts : 2,
+    TTL         : 60 * 1000 // blocks for 1 minute
   }
   optionsB.sHash = crypto.createHash('sha256').update(optionsB.promiseFunc.toString() + optionsB.args.toString()).digest('hex');
 
   let tStart = Date.now();
   let aPromises = [];
-  const N = 250000; // memory issue with 500k -> 1million stored promises with retries
+  const N = 10; // 250000; // memory issue with 500k -> 1million stored promises with retries
   for (let i = 0;i < N;i++) {
-    aPromises.push(execOncePerArgs(options));  
-    aPromises.push(execOncePerArgs(optionsB));  
+    setTimeout( () => { // stagger calls
+      aPromises.push(execOncePerArgs(options));  
+      aPromises.push(execOncePerArgs(optionsB));  
+    }, i * 100);
   }
   Promise.all(aPromises).then( () => {
     let dT = Date.now() - tStart;
-    console.log({ action: 'promises complete time', dT: dT + ' ms' });
+    console.log({ action: sTest + '.promises.complete', dT: dT + ' ms' });
   })
   .catch( (err) => {
-    console.log({ action: 'promises.err', err:err });
+    console.log({ action: sTest + '.promises.err', err:err });
   })
 }
 {
@@ -78,6 +83,8 @@ const crypto          = require('crypto');
 }
 {
 
+  const sTest = 'retries';
+
   // retries
   let iCalled = 0;
 
@@ -87,7 +94,7 @@ const crypto          = require('crypto');
 
     return new Promise( (resolve,reject) => {
       if (iCalled < 3) {
-        reject(Error('someOtherFunc.err.'+iCalled));
+        reject(Error(sTest + '.someOtherFunc.err.'+iCalled));
       }
       else {
         setTimeout( () => {
@@ -101,9 +108,9 @@ const crypto          = require('crypto');
 
   retries(someOtherFunc,this,args,0,maxAttempts)
   .then( (data) => {
-    console.log({ action:'retries', data:data })
+    console.log({ action: sTest + '.complete', data:data })
   })
   .catch( (err) => {
-    console.error({ action: 'retries.err.should.not.happen', err:err });
+    console.error({ action: sTest + '.err.should.not.happen', err:err });
   })
 }

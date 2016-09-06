@@ -40,7 +40,7 @@ const retries = (promiseFun,thisArg,argsArray,nAttempts,maxAttempts) => {
           reject(err);
         }
         else {
-          // console.log({ action: sAction + '.retrying', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
+          console.log({ action: sAction + '.retrying', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
           const delay = Math.pow(2,nAttempts) * 1000;
           setTimeout(() => {
             resolve(retries(promiseFun,thisArg,argsArray,nAttempts,maxAttempts));
@@ -62,6 +62,7 @@ const execOncePerArgs = (options) => {
   const args          = options.args;
   const sHash         = options.sHash;
   const maxAttempts   = exists(options.maxAttempts) && Math.floor(options.maxAttempts) === options.maxAttempts ? options.maxAttempts : 1;
+  const TTL           = options.TTL; // time block is good for in ms
 
 
   if (typeof promiseFunc !== 'function' || Array.isArray(args) !== true || typeof sHash !== 'string' || sHash.length < 1) {
@@ -73,6 +74,7 @@ const execOncePerArgs = (options) => {
 
   let oQueue = queues[sHash];
   if (!exists(oQueue)) {
+    // console.log({ action: sAction + '.storing.hash', sHash:sHash});
     oQueue = queues[sHash] = {
       promiseFunc : _.once( () => {
         return retries(promiseFunc,thisArg,args,0,maxAttempts);
@@ -80,6 +82,16 @@ const execOncePerArgs = (options) => {
       thisArg     : thisArg,
       args        : args
     } 
+  }
+  // else {
+  //   console.log({ action: sAction + '.hash.exists', sHash:sHash});
+  // }
+
+  if (typeof TTL === 'number') {
+    setTimeout( () => {
+      // console.log({ action: sAction + '.removing.blocker', sHash:sHash});
+      delete queues[sHash];
+    },TTL);
   }
 
   return oQueue.promiseFunc.apply(oQueue.thisArg,oQueue.args);
