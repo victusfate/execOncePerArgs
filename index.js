@@ -31,22 +31,28 @@ const retries = (promiseFun,thisArg,argsArray,nAttempts,maxAttempts) => {
     }
     else {
       nAttempts++;
-      promiseFun.apply(thisArg,argsArray).then( function(res) {
-        resolve(res);
-      })
-      .catch( (err) => {
-        if (nAttempts >= maxAttempts) {
-          console.error({ action: sAction + '.max.retries.err', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
-          reject(err);
-        }
-        else {
-          console.log({ action: sAction + '.retrying', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
-          const delay = Math.pow(2,nAttempts) * 1000;
-          setTimeout(() => {
-            resolve(retries(promiseFun,thisArg,argsArray,nAttempts,maxAttempts));
-          }, delay);            
-        }
-      });
+      let aPossiblePromise = promiseFun.apply(thisArg,argsArray);
+      if (typeof aPossiblePromise.then !== 'function') {
+        reject(Error(promiseFun.name+' not passed a promise returning function, return type '+ typeof aPossiblePromise))
+      }
+      else {
+        aPossiblePromise.then( (res) => {
+          resolve(res);
+        })
+        .catch( (err) => {
+          if (nAttempts >= maxAttempts) {
+            console.error({ action: sAction + '.max.retries.err', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
+            reject(err);
+          }
+          else {
+            console.log({ action: sAction + '.retrying', nAttempts: nAttempts, maxAttempts: maxAttempts, promiseFuncName: promiseFun.name, args: argsArray });
+            const delay = Math.pow(2,nAttempts) * 1000;
+            setTimeout(() => {
+              resolve(retries(promiseFun,thisArg,argsArray,nAttempts,maxAttempts));
+            }, delay);            
+          }
+        });        
+      }
     }
   });
 }
@@ -65,8 +71,8 @@ const execOncePerArgs = (options) => {
   const TTL           = options.TTL; // time block is good for in ms
 
 
-  if (typeof promiseFunc !== 'function' || typeof promiseFunc.then !== 'function' || Array.isArray(args) !== true || typeof sHash !== 'string' || sHash.length < 1) {
-    const oErr = { action: sAction + '.invalid.inputs.err', options: options, typeOfFunc: typeof promiseFunc, isPromise: typeof promiseFunc.then !== 'function', aArgsIsArray: Array.isArray(args) };
+  if (typeof promiseFunc !== 'function' || Array.isArray(args) !== true || typeof sHash !== 'string' || sHash.length < 1) {
+    const oErr = { action: sAction + '.invalid.inputs.err', options: options, typeOfFunc: typeof promiseFunc, aArgsIsArray: Array.isArray(args) };
     console.error(oErr);
     // throw new Error(`${oErr}`);
     return;
