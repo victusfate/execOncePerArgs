@@ -65,8 +65,8 @@ const execOncePerArgs = (options) => {
   const TTL           = options.TTL; // time block is good for in ms
 
 
-  if (typeof promiseFunc !== 'function' || Array.isArray(args) !== true || typeof sHash !== 'string' || sHash.length < 1) {
-    const oErr = { action: sAction + '.invalid.inputs.err', options: options, typeOfFunc: typeof promiseFunc, aArgsIsArray: Array.isArray(args) };
+  if (typeof promiseFunc !== 'function' || typeof promiseFunc.then !== 'function' || Array.isArray(args) !== true || typeof sHash !== 'string' || sHash.length < 1) {
+    const oErr = { action: sAction + '.invalid.inputs.err', options: options, typeOfFunc: typeof promiseFunc, isPromise: typeof promiseFunc.then !== 'function', aArgsIsArray: Array.isArray(args) };
     console.error(oErr);
     // throw new Error(`${oErr}`);
     return;
